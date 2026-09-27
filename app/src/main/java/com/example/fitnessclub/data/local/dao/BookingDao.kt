@@ -58,6 +58,17 @@ interface BookingDao {
     @Query("DELETE FROM Booking WHERE id = :bookingId")
     suspend fun deleteById(bookingId: Long): Int
 
+    @Query(
+        """
+        SELECT Booking.workoutId
+        FROM Booking
+        INNER JOIN Workout ON Booking.workoutId = Workout.id
+        WHERE Booking.id = :bookingId AND Workout.dateTime > :now
+        LIMIT 1
+        """
+    )
+    suspend fun getActiveBookingWorkoutId(bookingId: Long, now: Long): Long?
+
     @Transaction
     @Query(
         """

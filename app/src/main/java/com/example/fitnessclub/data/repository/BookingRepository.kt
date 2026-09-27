@@ -46,18 +46,27 @@ class BookingRepository(
                     bookingDate = System.currentTimeMillis()
                 )
             )
-            workoutDao.incrementBookings(workoutId)
+
+            val updatedRows = workoutDao.incrementBookings(workoutId)
+            if (updatedRows == 0) {
+                error("Не удалось обновить количество записей")
+            }
 
             BookingResult.BOOKED
         }
 
     suspend fun cancel(bookingId: Long): Boolean = database.withTransaction {
-        val deleted = bookingDao.deleteById(bookingId)
-        if (deleted > 0) {
-            // Сначала находим тренировку до удаления записи через связанный запрос в вызывающем слое.
-            true
-        } else {
-            false
+        val workoutId = bookingDao.getActiveBookingWorkoutId(
+            bookingId = bookingId,
+            now = System.currentTimeMillis()
+        ) ?: return@withTransaction false
+
+        val deletedRows = bookingDao.deleteById(bookingId)
+        if (deletedRows == 0) {
+            return@withTransaction false
         }
+
+        workoutDao.decrementBookings(workoutId)
+        true
     }
 }
