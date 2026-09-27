@@ -1,22 +1,29 @@
 package com.example.fitnessclub.ui.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.fitnessclub.R
 import com.example.fitnessclub.data.repository.BookingRepository
 import com.example.fitnessclub.data.repository.TrainerRepository
 import com.example.fitnessclub.data.repository.UserRepository
 import com.example.fitnessclub.data.repository.WorkoutRepository
 import com.example.fitnessclub.data.session.SessionManager
+import com.example.fitnessclub.ui.DashboardViewModelFactory
+import com.example.fitnessclub.ui.LoginViewModelFactory
+import com.example.fitnessclub.ui.RegistrationViewModelFactory
+import com.example.fitnessclub.ui.ScheduleViewModelFactory
+import com.example.fitnessclub.ui.auth.LoginScreen
+import com.example.fitnessclub.ui.auth.LoginViewModel
+import com.example.fitnessclub.ui.auth.RegistrationScreen
+import com.example.fitnessclub.ui.auth.RegistrationViewModel
+import com.example.fitnessclub.ui.dashboard.DashboardScreen
+import com.example.fitnessclub.ui.dashboard.DashboardViewModel
+import com.example.fitnessclub.ui.schedule.ScheduleScreen
+import com.example.fitnessclub.ui.schedule.ScheduleViewModel
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun NavGraph(
@@ -28,51 +35,102 @@ fun NavGraph(
     trainerRepository: TrainerRepository,
     sessionManager: SessionManager
 ) {
-    // Репозитории и менеджер сессии передаются в граф для подключения экранов на следующих шагах.
-    @Suppress("UNUSED_VARIABLE")
-    val dependencies = listOf(
-        userRepository,
-        workoutRepository,
-        bookingRepository,
-        trainerRepository,
-        sessionManager
-    )
+    val application = androidx.compose.ui.platform.LocalContext.current.applicationContext
+            as android.app.Application
 
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
         composable(Screen.Login.route) {
-            PlaceholderScreen(title = stringResource(R.string.login_title))
+            val vm: LoginViewModel = viewModel(
+                factory = LoginViewModelFactory(application, userRepository, sessionManager)
+            )
+            LoginScreen(
+                viewModel = vm,
+                onLoginSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onRegisterClick = {
+                    navController.navigate(Screen.Registration.route)
+                }
+            )
         }
+
         composable(Screen.Registration.route) {
-            PlaceholderScreen(title = stringResource(R.string.register_title))
+            val vm: RegistrationViewModel = viewModel(
+                factory = RegistrationViewModelFactory(
+                    application,
+                    userRepository,
+                    sessionManager
+                )
+            )
+            RegistrationScreen(
+                viewModel = vm,
+                onRegistrationSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
+
         composable(Screen.Dashboard.route) {
-            PlaceholderScreen(title = stringResource(R.string.app_name))
+            val userId = rememberSessionUserId(sessionManager)
+            if (userId != null) {
+                val vm: DashboardViewModel = viewModel(
+                    key = "dashboard_$userId",
+                    factory = DashboardViewModelFactory(
+                        application,
+                        userId,
+                        userRepository
+                    )
+                )
+                DashboardScreen(
+                    viewModel = vm,
+                    onSchedule = { navController.navigate(Screen.Schedule.route) },
+                    onBookings = { navController.navigate(Screen.Bookings.route) },
+                    onProfile = { navController.navigate(Screen.Profile.route) },
+                    onTrainers = { navController.navigate(Screen.Trainers.route) }
+                )
+            }
         }
+
         composable(Screen.Schedule.route) {
-            PlaceholderScreen(title = stringResource(R.string.schedule_title))
+            val userId = rememberSessionUserId(sessionManager)
+            if (userId != null) {
+                val vm: ScheduleViewModel = viewModel(
+                    key = "schedule_$userId",
+                    factory = ScheduleViewModelFactory(
+                        application,
+                        userId,
+                        workoutRepository,
+                        bookingRepository
+                    )
+                )
+                ScheduleScreen(viewModel = vm)
+            }
         }
-        composable(Screen.Bookings.route) {
-            PlaceholderScreen(title = stringResource(R.string.my_bookings_title))
-        }
-        composable(Screen.Profile.route) {
-            PlaceholderScreen(title = stringResource(R.string.profile_title))
-        }
-        composable(Screen.Trainers.route) {
-            PlaceholderScreen(title = stringResource(R.string.trainers_title))
-        }
+
+        // Экраны будут подключены на шаге 5.
+        composable(Screen.Bookings.route) {}
+        composable(Screen.Profile.route) {}
+        composable(Screen.Trainers.route) {}
     }
 }
 
 @Composable
-private fun PlaceholderScreen(title: String) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+private fun rememberSessionUserId(sessionManager: SessionManager): Long? {
+    val userIdState = androidx.compose.runtime.produceState<Long?>(
+        initialValue = null,
+        sessionManager
     ) {
-        Text(text = title)
+        value = sessionManager.userId.first()
     }
+    return userIdState.value
 }
