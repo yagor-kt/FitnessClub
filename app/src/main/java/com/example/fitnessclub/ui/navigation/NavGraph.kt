@@ -1,7 +1,8 @@
 package com.example.fitnessclub.ui.navigation
 
+import android.app.Application
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -11,18 +12,27 @@ import com.example.fitnessclub.data.repository.TrainerRepository
 import com.example.fitnessclub.data.repository.UserRepository
 import com.example.fitnessclub.data.repository.WorkoutRepository
 import com.example.fitnessclub.data.session.SessionManager
+import com.example.fitnessclub.ui.BookingsViewModelFactory
 import com.example.fitnessclub.ui.DashboardViewModelFactory
 import com.example.fitnessclub.ui.LoginViewModelFactory
+import com.example.fitnessclub.ui.ProfileViewModelFactory
 import com.example.fitnessclub.ui.RegistrationViewModelFactory
 import com.example.fitnessclub.ui.ScheduleViewModelFactory
+import com.example.fitnessclub.ui.TrainersViewModelFactory
 import com.example.fitnessclub.ui.auth.LoginScreen
 import com.example.fitnessclub.ui.auth.LoginViewModel
 import com.example.fitnessclub.ui.auth.RegistrationScreen
 import com.example.fitnessclub.ui.auth.RegistrationViewModel
+import com.example.fitnessclub.ui.bookings.BookingsScreen
+import com.example.fitnessclub.ui.bookings.BookingsViewModel
 import com.example.fitnessclub.ui.dashboard.DashboardScreen
 import com.example.fitnessclub.ui.dashboard.DashboardViewModel
+import com.example.fitnessclub.ui.profile.ProfileScreen
+import com.example.fitnessclub.ui.profile.ProfileViewModel
 import com.example.fitnessclub.ui.schedule.ScheduleScreen
 import com.example.fitnessclub.ui.schedule.ScheduleViewModel
+import com.example.fitnessclub.ui.trainers.TrainersScreen
+import com.example.fitnessclub.ui.trainers.TrainersViewModel
 import kotlinx.coroutines.flow.first
 
 @Composable
@@ -36,7 +46,7 @@ fun NavGraph(
     sessionManager: SessionManager
 ) {
     val application = androidx.compose.ui.platform.LocalContext.current.applicationContext
-            as android.app.Application
+            as Application
 
     NavHost(
         navController = navController,
@@ -85,11 +95,7 @@ fun NavGraph(
             if (userId != null) {
                 val vm: DashboardViewModel = viewModel(
                     key = "dashboard_$userId",
-                    factory = DashboardViewModelFactory(
-                        application,
-                        userId,
-                        userRepository
-                    )
+                    factory = DashboardViewModelFactory(application, userId, userRepository)
                 )
                 DashboardScreen(
                     viewModel = vm,
@@ -117,16 +123,65 @@ fun NavGraph(
             }
         }
 
-        // Экраны будут подключены на шаге 5.
-        composable(Screen.Bookings.route) {}
-        composable(Screen.Profile.route) {}
-        composable(Screen.Trainers.route) {}
+        composable(Screen.Bookings.route) {
+            val userId = rememberSessionUserId(sessionManager)
+            if (userId != null) {
+                val vm: BookingsViewModel = viewModel(
+                    key = "bookings_$userId",
+                    factory = BookingsViewModelFactory(
+                        application,
+                        userId,
+                        bookingRepository
+                    )
+                )
+                BookingsScreen(viewModel = vm)
+            }
+        }
+
+        composable(Screen.Profile.route) {
+            val userId = rememberSessionUserId(sessionManager)
+            if (userId != null) {
+                val vm: ProfileViewModel = viewModel(
+                    key = "profile_$userId",
+                    factory = ProfileViewModelFactory(
+                        application,
+                        userId,
+                        userRepository,
+                        sessionManager
+                    )
+                )
+                ProfileScreen(
+                    viewModel = vm,
+                    onLoggedOut = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+        }
+
+        composable(Screen.Trainers.route) {
+            val userId = rememberSessionUserId(sessionManager)
+            if (userId != null) {
+                val vm: TrainersViewModel = viewModel(
+                    key = "trainers_$userId",
+                    factory = TrainersViewModelFactory(
+                        application,
+                        userId,
+                        trainerRepository
+                    )
+                )
+                TrainersScreen(viewModel = vm)
+            }
+        }
     }
 }
 
 @Composable
 private fun rememberSessionUserId(sessionManager: SessionManager): Long? {
-    val userIdState = androidx.compose.runtime.produceState<Long?>(
+    val userIdState = produceState<Long?>(
         initialValue = null,
         sessionManager
     ) {
