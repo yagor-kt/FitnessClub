@@ -1,3 +1,84 @@
 <resources>
-    <string name="app_name">FitnessClub</string>
+    <string name="app_name">Фитнес-клуб</string>
+
+    <!-- Общие элементы -->
+    <string name="loading">Загрузка…</string>
+    <string name="retry">Повторить</string>
+    <string name="back">Назад</string>
+    <string name="cancel">Отмена</string>
+    <string name="save">Сохранить</string>
+    <string name="close">Закрыть</string>
+    <string name="error_generic">Произошла ошибка</string>
+    <string name="empty_list">Список пока пуст</string>
+
+    <!-- Авторизация и регистрация -->
+    <string name="login_title">Вход</string>
+    <string name="login_subtitle">Войдите в аккаунт фитнес-клуба</string>
+    <string name="email">Электронная почта</string>
+    <string name="password">Пароль</string>
+    <string name="name">Имя</string>
+    <string name="login_button">Войти</string>
+    <string name="register_button">Зарегистрироваться</string>
+    <string name="register_title">Регистрация</string>
+    <string name="register_submit">Создать аккаунт</string>
+    <string name="login_error">Неверный email или пароль</string>
+    <string name="registration_error">Не удалось зарегистрироваться</string>
+    <string name="email_already_exists">Пользователь с таким email уже существует</string>
+    <string name="validation_required">Заполните все обязательные поля</string>
+    <string name="validation_email">Введите корректный email</string>
+    <string name="validation_password">Пароль должен содержать не менее 4 символов</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_greeting">Привет, %1$s!</string>
+    <string name="subscription_title">Абонемент</string>
+    <string name="subscription_type">Месячный</string>
+    <string name="subscription_end_date">Действует до %1$s</string>
+    <string name="subscription_active">Активен</string>
+    <string name="subscription_expired">Истёк</string>
+    <string name="workouts_this_month">Тренировок в этом месяце: %1$d</string>
+    <string name="schedule">Расписание</string>
+    <string name="my_bookings">Мои записи</string>
+    <string name="profile">Профиль</string>
+    <string name="trainers">Тренеры</string>
+
+    <!-- Расписание -->
+    <string name="schedule_title">Расписание</string>
+    <string name="filter_today">Сегодня</string>
+    <string name="filter_tomorrow">Завтра</string>
+    <string name="filter_week">Неделя</string>
+    <string name="trainer_label">Тренер: %1$s</string>
+    <string name="hall_label">Зал: %1$s</string>
+    <string name="available_places">Свободно мест: %1$d</string>
+    <string name="no_places">Мест нет</string>
+    <string name="book_workout">Записаться</string>
+    <string name="already_booked">Вы записаны</string>
+    <string name="booking_success">Вы записаны на тренировку</string>
+    <string name="booking_error">Не удалось записаться на тренировку</string>
+
+    <!-- Мои записи -->
+    <string name="my_bookings_title">Мои записи</string>
+    <string name="tab_active">Активные</string>
+    <string name="tab_history">История</string>
+    <string name="cancel_booking">Отменить</string>
+    <string name="cancel_booking_success">Запись отменена</string>
+    <string name="cancel_booking_error">Не удалось отменить запись</string>
+    <string name="personal_workout">Персональная тренировка</string>
+
+    <!-- Профиль -->
+    <string name="profile_title">Профиль</string>
+    <string name="weight">Вес, кг</string>
+    <string name="goal">Цель</string>
+    <string name="edit_profile">Редактировать профиль</string>
+    <string name="edit_profile_title">Редактирование профиля</string>
+    <string name="logout">Выйти</string>
+    <string name="profile_update_success">Профиль обновлён</string>
+    <string name="profile_update_error">Не удалось обновить профиль</string>
+
+    <!-- Тренеры -->
+    <string name="trainers_title">Тренеры</string>
+    <string name="specialization_label">Специализация: %1$s</string>
+    <string name="experience_label">Стаж: %1$d лет</string>
+    <string name="book_personal_workout">Записаться на персональную</string>
+    <string name="personal_booking_success">Вы записаны на персональную тренировку</string>
+    <string name="personal_booking_error">Не удалось записаться на персональную тренировку</string>
 </resources>
