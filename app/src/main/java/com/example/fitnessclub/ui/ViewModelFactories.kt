@@ -83,10 +83,17 @@ class ProfileViewModelFactory(
     private val application: Application,
     private val userId: Long,
     private val userRepository: UserRepository,
+    private val bookingRepository: BookingRepository,
     private val sessionManager: SessionManager
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        ProfileViewModel(application, userId, userRepository, sessionManager) as T
+        ProfileViewModel(
+            application,
+            userId,
+            userRepository,
+            bookingRepository,
+            sessionManager
+        ) as T
 }
 
 @Suppress("UNCHECKED_CAST")

@@ -17,9 +17,17 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
+enum class TrainerFilter {
+    ALL,
+    YOGA,
+    STRENGTH,
+    CARDIO
+}
+
 data class TrainersData(
     val trainers: List<Trainer>,
-    val bookedTrainerNames: Set<String>
+    val bookedTrainerNames: Set<String>,
+    val filter: TrainerFilter
 )
 
 sealed interface TrainersUiState {
@@ -33,6 +41,8 @@ class TrainersViewModel(
     private val userId: Long,
     private val trainerRepository: TrainerRepository
 ) : AndroidViewModel(application) {
+    private val selectedFilter = MutableStateFlow(TrainerFilter.ALL)
+
     private val _uiState = MutableStateFlow<TrainersUiState>(TrainersUiState.Loading)
     val uiState: StateFlow<TrainersUiState> = _uiState.asStateFlow()
 
@@ -47,16 +57,40 @@ class TrainersViewModel(
 
     fun retry() = observeTrainers()
 
+    fun selectFilter(filter: TrainerFilter) {
+        selectedFilter.value = filter
+    }
+
     private fun observeTrainers() {
         observeJob?.cancel()
         observeJob = viewModelScope.launch {
             _uiState.value = TrainersUiState.Loading
             combine(
                 trainerRepository.getAll(),
-                trainerRepository.observePersonalTrainerNames(userId)
-            ) { trainers, bookedNames ->
+                trainerRepository.observePersonalTrainerNames(userId),
+                selectedFilter
+            ) { trainers, bookedNames, filter ->
+                val filteredTrainers = trainers.filter { trainer ->
+                    when (filter) {
+                        TrainerFilter.ALL -> true
+                        TrainerFilter.YOGA ->
+                            trainer.specialization.contains("йог", ignoreCase = true) ||
+                                    trainer.specialization.contains("растяж", ignoreCase = true)
+                        TrainerFilter.STRENGTH ->
+                            trainer.specialization.contains("сил", ignoreCase = true) ||
+                                    trainer.specialization.contains("кроссфит", ignoreCase = true)
+                        TrainerFilter.CARDIO ->
+                            trainer.specialization.contains("кардио", ignoreCase = true) ||
+                                    trainer.specialization.contains("функцион", ignoreCase = true)
+                    }
+                }
+
                 TrainersUiState.Success(
-                    TrainersData(trainers, bookedNames.toSet())
+                    TrainersData(
+                        trainers = filteredTrainers,
+                        bookedTrainerNames = bookedNames.toSet(),
+                        filter = filter
+                    )
                 )
             }
                 .catch {
@@ -71,16 +105,13 @@ class TrainersViewModel(
     fun bookPersonal(trainer: Trainer) {
         viewModelScope.launch {
             try {
-                when (trainerRepository.bookPersonal(userId, trainer)) {
-                    PersonalBookingResult.BOOKED -> _messages.emit(
-                        getApplication<Application>().getString(
-                            R.string.personal_booking_success
-                        )
-                    )
-                    PersonalBookingResult.ALREADY_BOOKED -> _messages.emit(
-                        getApplication<Application>().getString(R.string.already_booked)
-                    )
+                val messageId = when (
+                    trainerRepository.bookPersonal(userId, trainer)
+                ) {
+                    PersonalBookingResult.BOOKED -> R.string.personal_booking_success
+                    PersonalBookingResult.ALREADY_BOOKED -> R.string.already_booked
                 }
+                _messages.emit(getApplication<Application>().getString(messageId))
             } catch (_: Exception) {
                 _messages.emit(
                     getApplication<Application>().getString(
