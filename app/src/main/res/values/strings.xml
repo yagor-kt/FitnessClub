@@ -10,13 +10,13 @@
     <string name="close">Закрыть</string>
     <string name="error_generic">Произошла ошибка</string>
     <string name="empty_list">Список пока пуст</string>
+    <string name="name">Имя</string>
+    <string name="email">Электронная почта</string>
+    <string name="password">Пароль</string>
 
     <!-- Авторизация и регистрация -->
     <string name="login_title">Вход</string>
     <string name="login_subtitle">Войдите в аккаунт фитнес-клуба</string>
-    <string name="email">Электронная почта</string>
-    <string name="password">Пароль</string>
-    <string name="name">Имя</string>
     <string name="login_button">Войти</string>
     <string name="register_button">Зарегистрироваться</string>
     <string name="register_title">Регистрация</string>
@@ -84,18 +84,38 @@
 
     <!-- Профиль -->
     <string name="profile_title">Профиль</string>
+    <string name="profile_avatar">Аватар пользователя</string>
+    <string name="profile_stats_title">Моя активность</string>
     <string name="weight">Вес, кг</string>
     <string name="goal">Цель</string>
+    <string name="weight_value">Вес: %1$s кг</string>
+    <string name="goal_value">Цель: %1$s</string>
+    <string name="achievements_title">Достижения</string>
+    <string name="achievement_first">Первая тренировка</string>
+    <string name="achievement_five">5 тренировок</string>
+    <string name="achievement_ten">10 тренировок</string>
+    <string name="achievement_twenty_five">25 тренировок</string>
+    <string name="achievement_month_club">Месяц с клубом</string>
+    <string name="monthly_goal_visits">Цель на месяц: %1$d тренировок</string>
     <string name="edit_profile">Редактировать профиль</string>
     <string name="edit_profile_title">Редактирование профиля</string>
     <string name="logout">Выйти</string>
+    <string name="logout_confirm_title">Выйти из аккаунта?</string>
+    <string name="logout_confirm_message">Вы сможете войти снова в любое время.</string>
+    <string name="keep_session">Остаться</string>
     <string name="profile_update_success">Профиль обновлён</string>
     <string name="profile_update_error">Не удалось обновить профиль</string>
 
     <!-- Тренеры -->
     <string name="trainers_title">Тренеры</string>
+    <string name="filter_all">Все</string>
+    <string name="filter_yoga">Йога</string>
+    <string name="filter_strength">Силовые</string>
+    <string name="filter_cardio">Кардио</string>
     <string name="specialization_label">Специализация: %1$s</string>
     <string name="experience_label">Стаж: %1$d лет</string>
+    <string name="trainer_rating">Рейтинг: %1$.1f из 5</string>
+    <string name="top_trainer">Топ тренер</string>
     <string name="book_personal_workout">Записаться на персональную</string>
     <string name="personal_booking_success">Вы записаны на персональную тренировку</string>
     <string name="personal_booking_error">Не удалось записаться на персональную тренировку</string>

@@ -152,6 +152,7 @@ fun NavGraph(
                         application,
                         userId,
                         userRepository,
+                        bookingRepository,
                         sessionManager
                     )
                 )
