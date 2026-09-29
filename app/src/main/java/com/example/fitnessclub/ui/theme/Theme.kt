@@ -7,6 +7,10 @@ import androidx.compose.runtime.Composable
 private val ClubDarkColorScheme = darkColorScheme(
     primary = ClubPrimary,
     onPrimary = ClubOnPrimary,
+    secondary = ClubSecondary,
+    onSecondary = ClubText,
+    tertiary = ClubWarning,
+    onTertiary = ClubOnPrimary,
     background = ClubBackground,
     onBackground = ClubText,
     surface = ClubSurface,
@@ -14,7 +18,13 @@ private val ClubDarkColorScheme = darkColorScheme(
     surfaceVariant = ClubSurfaceVariant,
     onSurfaceVariant = ClubTextSecondary,
     error = ClubError,
-    onError = ClubBackground
+    onError = ClubOnPrimary,
+    primaryContainer = ClubPrimary.copy(alpha = 0.18f),
+    onPrimaryContainer = ClubPrimary,
+    secondaryContainer = ClubSecondary.copy(alpha = 0.22f),
+    onSecondaryContainer = ClubText,
+    tertiaryContainer = ClubWarning.copy(alpha = 0.2f),
+    onTertiaryContainer = ClubWarning
 )
 
 @Composable
