@@ -13,5 +13,6 @@ data class Workout(
     val hall: String,
     val maxCapacity: Int,
     val currentBookings: Int,
-    val isPersonal: Boolean
+    val isPersonal: Boolean,
+    val type: String = "Кардио"
 )
