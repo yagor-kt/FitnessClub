@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fitnessclub.R
 import com.example.fitnessclub.data.local.relation.BookingWithWorkout
 import com.example.fitnessclub.data.repository.BookingRepository
+import com.example.fitnessclub.util.DateFormatter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,9 @@ import kotlinx.coroutines.launch
 
 data class BookingsData(
     val active: List<BookingWithWorkout>,
-    val history: List<BookingWithWorkout>
+    val history: List<BookingWithWorkout>,
+    val totalCompleted: Int,
+    val completedThisMonth: Int
 )
 
 sealed interface BookingsUiState {
@@ -44,17 +47,32 @@ class BookingsViewModel(
         observeBookings()
     }
 
-    fun retry() = observeBookings()
+    fun retry() {
+        observeBookings()
+    }
 
     private fun observeBookings() {
         observeJob?.cancel()
         observeJob = viewModelScope.launch {
             _uiState.value = BookingsUiState.Loading
+
+            val now = System.currentTimeMillis()
+            val monthStart = DateFormatter.monthStart()
+
             combine(
                 bookingRepository.getActiveBookings(userId),
-                bookingRepository.getBookingHistory(userId)
-            ) { active, history ->
-                BookingsUiState.Success(BookingsData(active, history))
+                bookingRepository.getBookingHistory(userId),
+                bookingRepository.countAllCompleted(userId, now),
+                bookingRepository.countCompletedThisMonth(userId, monthStart, now)
+            ) { active, history, total, thisMonth ->
+                BookingsUiState.Success(
+                    BookingsData(
+                        active = active,
+                        history = history,
+                        totalCompleted = total,
+                        completedThisMonth = thisMonth
+                    )
+                )
             }
                 .catch {
                     _uiState.value = BookingsUiState.Error(
@@ -68,15 +86,12 @@ class BookingsViewModel(
     fun cancel(bookingId: Long) {
         viewModelScope.launch {
             try {
-                if (bookingRepository.cancel(bookingId)) {
-                    _messages.emit(
-                        getApplication<Application>().getString(R.string.cancel_booking_success)
-                    )
+                val messageId = if (bookingRepository.cancel(bookingId)) {
+                    R.string.cancel_booking_success
                 } else {
-                    _messages.emit(
-                        getApplication<Application>().getString(R.string.cancel_booking_error)
-                    )
+                    R.string.cancel_booking_error
                 }
+                _messages.emit(getApplication<Application>().getString(messageId))
             } catch (_: Exception) {
                 _messages.emit(
                     getApplication<Application>().getString(R.string.cancel_booking_error)

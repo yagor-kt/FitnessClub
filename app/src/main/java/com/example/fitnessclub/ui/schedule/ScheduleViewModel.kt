@@ -8,15 +8,14 @@ import com.example.fitnessclub.data.local.entity.Workout
 import com.example.fitnessclub.data.repository.BookingRepository
 import com.example.fitnessclub.data.repository.BookingResult
 import com.example.fitnessclub.data.repository.WorkoutRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -29,7 +28,8 @@ enum class ScheduleFilter {
 data class ScheduleData(
     val workouts: List<Workout>,
     val bookedWorkoutIds: Set<Long>,
-    val filter: ScheduleFilter
+    val filter: ScheduleFilter,
+    val isRefreshing: Boolean
 )
 
 sealed interface ScheduleUiState {
@@ -45,6 +45,9 @@ class ScheduleViewModel(
     private val bookingRepository: BookingRepository
 ) : AndroidViewModel(application) {
     private val filter = MutableStateFlow(ScheduleFilter.TODAY)
+    private val refreshTick = MutableStateFlow(0)
+    private val isRefreshing = MutableStateFlow(false)
+
     private val _uiState = MutableStateFlow<ScheduleUiState>(ScheduleUiState.Loading)
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
@@ -56,17 +59,19 @@ class ScheduleViewModel(
             combine(
                 workoutRepository.getAll(),
                 workoutRepository.observeBookedWorkoutIds(userId),
-                filter
-            ) { workouts, bookedIds, selectedFilter ->
+                filter,
+                refreshTick,
+                isRefreshing
+            ) { workouts, bookedIds, selectedFilter, _, refreshing ->
                 val now = System.currentTimeMillis()
                 val (start, end) = dateRange(selectedFilter, now)
-                val filtered = workouts.filter { it.dateTime in start..end }
 
                 ScheduleUiState.Success(
                     ScheduleData(
-                        workouts = filtered,
+                        workouts = workouts.filter { it.dateTime in start..end },
                         bookedWorkoutIds = bookedIds.toSet(),
-                        filter = selectedFilter
+                        filter = selectedFilter,
+                        isRefreshing = refreshing
                     )
                 )
             }
@@ -83,33 +88,31 @@ class ScheduleViewModel(
         filter.value = value
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            if (isRefreshing.value) return@launch
+
+            isRefreshing.value = true
+            refreshTick.value++
+            delay(600)
+            isRefreshing.value = false
+        }
+    }
+
     fun retry() {
-        // Flow Room повторно уведомит подписчиков после переподписки экрана.
-        _uiState.value = ScheduleUiState.Loading
-        filter.value = filter.value
+        refresh()
     }
 
     fun book(workoutId: Long) {
         viewModelScope.launch {
             try {
-                when (bookingRepository.book(userId, workoutId)) {
-                    BookingResult.BOOKED ->
-                        _messages.emit(
-                            getApplication<Application>().getString(R.string.booking_success)
-                        )
-                    BookingResult.FULL ->
-                        _messages.emit(
-                            getApplication<Application>().getString(R.string.no_places)
-                        )
-                    BookingResult.ALREADY_BOOKED ->
-                        _messages.emit(
-                            getApplication<Application>().getString(R.string.already_booked)
-                        )
-                    BookingResult.NOT_FOUND ->
-                        _messages.emit(
-                            getApplication<Application>().getString(R.string.booking_error)
-                        )
+                val messageId = when (bookingRepository.book(userId, workoutId)) {
+                    BookingResult.BOOKED -> R.string.booking_success
+                    BookingResult.FULL -> R.string.no_places
+                    BookingResult.ALREADY_BOOKED -> R.string.already_booked
+                    BookingResult.NOT_FOUND -> R.string.booking_error
                 }
+                _messages.emit(getApplication<Application>().getString(messageId))
             } catch (_: Exception) {
                 _messages.emit(
                     getApplication<Application>().getString(R.string.booking_error)
@@ -131,15 +134,17 @@ class ScheduleViewModel(
             ScheduleFilter.TODAY -> {
                 val start = todayStart.timeInMillis
                 todayStart.add(Calendar.DAY_OF_YEAR, 1)
-                start to (todayStart.timeInMillis - 1)
+                start to todayStart.timeInMillis - 1
             }
+
             ScheduleFilter.TOMORROW -> {
                 todayStart.add(Calendar.DAY_OF_YEAR, 1)
                 val start = todayStart.timeInMillis
                 todayStart.add(Calendar.DAY_OF_YEAR, 1)
-                start to (todayStart.timeInMillis - 1)
+                start to todayStart.timeInMillis - 1
             }
-            ScheduleFilter.WEEK -> now to (now + 7L * 24 * 60 * 60 * 1000)
+
+            ScheduleFilter.WEEK -> now to now + 7L * 24 * 60 * 60 * 1000
         }
     }
 }
