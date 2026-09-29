@@ -95,7 +95,12 @@ fun NavGraph(
             if (userId != null) {
                 val vm: DashboardViewModel = viewModel(
                     key = "dashboard_$userId",
-                    factory = DashboardViewModelFactory(application, userId, userRepository)
+                    factory = DashboardViewModelFactory(
+                        application,
+                        userId,
+                        userRepository,
+                        bookingRepository
+                    )
                 )
                 DashboardScreen(
                     viewModel = vm,
