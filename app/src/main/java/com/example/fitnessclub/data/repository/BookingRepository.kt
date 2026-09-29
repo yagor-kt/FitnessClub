@@ -29,14 +29,17 @@ class BookingRepository(
     fun getNearestBooking(userId: Long): Flow<BookingWithWorkout?> =
         bookingDao.getNearestBooking(userId, System.currentTimeMillis())
 
+    fun getBookingsWithWorkouts(userId: Long): Flow<List<BookingWithWorkout>> =
+        bookingDao.getBookingsWithWorkouts(userId)
+
     fun countCompletedThisMonth(
         userId: Long,
         monthStart: Long,
         now: Long
     ): Flow<Int> = bookingDao.countCompletedThisMonth(userId, monthStart, now)
 
-    fun getBookingsWithWorkouts(userId: Long): Flow<List<BookingWithWorkout>> =
-        bookingDao.getBookingsWithWorkouts(userId)
+    fun countAllCompleted(userId: Long, now: Long): Flow<Int> =
+        bookingDao.countAllCompleted(userId, now)
 
     suspend fun book(userId: Long, workoutId: Long): BookingResult =
         database.withTransaction {
@@ -73,8 +76,7 @@ class BookingRepository(
             now = System.currentTimeMillis()
         ) ?: return@withTransaction false
 
-        val deletedRows = bookingDao.deleteById(bookingId)
-        if (deletedRows == 0) {
+        if (bookingDao.deleteById(bookingId) == 0) {
             return@withTransaction false
         }
 
