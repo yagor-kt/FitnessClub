@@ -30,6 +30,15 @@
 
     <!-- Dashboard -->
     <string name="dashboard_greeting">Привет, %1$s!</string>
+    <string name="dashboard_time_greeting">%1$s, %2$s!</string>
+    <string name="nearest_workout_title">Ближайшая тренировка</string>
+    <string name="no_nearest_workout">Запишитесь на тренировку</string>
+    <string name="to_schedule">К расписанию</string>
+    <string name="monthly_activity">Активность за месяц</string>
+    <string name="monthly_progress">%1$d из %2$d тренировок в этом месяце</string>
+    <string name="goal_reached">Цель достигнута</string>
+    <string name="streak_start">Начните серию сегодня</string>
+    <string name="streak_weeks">Вы тренируетесь %1$d недель подряд</string>
     <string name="subscription_title">Абонемент</string>
     <string name="subscription_type">Месячный</string>
     <string name="subscription_end_date">Действует до %1$s</string>
