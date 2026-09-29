@@ -1,5 +1,7 @@
 package com.example.fitnessclub.ui.bookings
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,8 +18,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -32,12 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.example.fitnessclub.R
 import com.example.fitnessclub.data.local.relation.BookingWithWorkout
+import com.example.fitnessclub.ui.components.AnimatedSnackbarHost
 import com.example.fitnessclub.ui.components.ClubCard
 import com.example.fitnessclub.ui.components.ClubOutlinedButton
 import com.example.fitnessclub.ui.components.LoadingIndicator
@@ -49,7 +50,7 @@ import java.util.Locale
 @Composable
 fun BookingsScreen(viewModel: BookingsViewModel) {
     val state by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
     val hapticFeedback = LocalHapticFeedback.current
     var selectedTab by remember { mutableIntStateOf(0) }
     var bookingToCancel by remember { mutableStateOf<BookingWithWorkout?>(null) }
@@ -66,7 +67,7 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
                 snackbarHostState.showSnackbar(current.message)
             }
             Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) }
+                snackbarHost = { AnimatedSnackbarHost(snackbarHostState) }
             ) { padding ->
                 Column(
                     modifier = Modifier
@@ -86,14 +87,14 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
         }
 
         is BookingsUiState.Success -> {
-            val bookings = if (selectedTab == 0) {
+            val selectedBookings = if (selectedTab == 0) {
                 current.data.active
             } else {
                 current.data.history
             }
 
             Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) }
+                snackbarHost = { AnimatedSnackbarHost(snackbarHostState) }
             ) { padding ->
                 Column(
                     modifier = Modifier
@@ -102,11 +103,15 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
                 ) {
                     Text(
                         text = stringResource(R.string.my_bookings_title),
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                     )
 
-                    ClubCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    ClubCard(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .animateContentSize()
+                    ) {
                         Text(
                             text = stringResource(
                                 R.string.total_visits,
@@ -134,55 +139,65 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
                         )
                     }
 
-                    if (bookings.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.empty_list),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            if (selectedTab == 0) {
-                                items(
-                                    items = bookings,
-                                    key = { it.booking.id }
-                                ) { item ->
-                                    BookingCard(
-                                        item = item,
-                                        isActive = true,
-                                        onCancel = { bookingToCancel = item }
-                                    )
-                                }
-                            } else {
-                                val groups = bookings.groupBy {
-                                    monthHeader(it.workout.dateTime)
-                                }
+                    Crossfade(
+                        targetState = selectedTab,
+                        label = "booking_tab_crossfade"
+                    ) { tab ->
+                        val bookings = if (tab == 0) {
+                            current.data.active
+                        } else {
+                            current.data.history
+                        }
 
-                                groups.forEach { (month, monthBookings) ->
-                                    item(key = "month_$month") {
-                                        Text(
-                                            text = month,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            )
-                                        )
-                                    }
-
+                        if (bookings.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.empty_list),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                if (tab == 0) {
                                     items(
-                                        items = monthBookings,
+                                        items = bookings,
                                         key = { it.booking.id }
                                     ) { item ->
                                         BookingCard(
                                             item = item,
-                                            isActive = false,
-                                            onCancel = {}
+                                            isActive = true,
+                                            onCancel = { bookingToCancel = item }
                                         )
+                                    }
+                                } else {
+                                    val groupedBookings = bookings.groupBy {
+                                        monthHeader(it.workout.dateTime)
+                                    }
+
+                                    groupedBookings.forEach { (month, monthBookings) ->
+                                        item(key = "month_$month") {
+                                            Text(
+                                                text = month,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.padding(
+                                                    horizontal = 16.dp,
+                                                    vertical = 8.dp
+                                                )
+                                            )
+                                        }
+                                        items(
+                                            items = monthBookings,
+                                            key = { it.booking.id }
+                                        ) { item ->
+                                            BookingCard(
+                                                item = item,
+                                                isActive = false,
+                                                onCancel = {}
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -191,15 +206,14 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
                 }
             }
 
-            val selectedBooking = bookingToCancel
-            if (selectedBooking != null) {
+            bookingToCancel?.let { booking ->
                 AlertDialog(
                     onDismissRequest = { bookingToCancel = null },
                     title = {
                         Text(
-                            text = stringResource(
+                            stringResource(
                                 R.string.cancel_booking_confirm_title,
-                                selectedBooking.workout.title
+                                booking.workout.title
                             )
                         )
                     },
@@ -209,7 +223,7 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
                                 hapticFeedback.performHapticFeedback(
                                     HapticFeedbackType.LongPress
                                 )
-                                viewModel.cancel(selectedBooking.booking.id)
+                                viewModel.cancel(booking.booking.id)
                                 bookingToCancel = null
                             }
                         ) {
@@ -223,6 +237,10 @@ fun BookingsScreen(viewModel: BookingsViewModel) {
                     }
                 )
             }
+
+            // Поддерживаем вычисление списка для выбранной вкладки до следующего Crossfade.
+            @Suppress("UNUSED_VARIABLE")
+            val currentTabBookings = selectedBookings
         }
     }
 }
@@ -233,7 +251,11 @@ private fun BookingCard(
     isActive: Boolean,
     onCancel: () -> Unit
 ) {
-    ClubCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+    ClubCard(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .animateContentSize()
+    ) {
         Text(
             text = item.workout.title,
             style = MaterialTheme.typography.titleLarge
@@ -256,7 +278,11 @@ private fun BookingCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val attended = item.workout.dateTime < System.currentTimeMillis()
                 androidx.compose.material3.Icon(
-                    imageVector = if (attended) Icons.Filled.CheckCircle else Icons.Filled.Close,
+                    imageVector = if (attended) {
+                        Icons.Filled.CheckCircle
+                    } else {
+                        Icons.Filled.Close
+                    },
                     contentDescription = null,
                     tint = if (attended) {
                         MaterialTheme.colorScheme.primary
