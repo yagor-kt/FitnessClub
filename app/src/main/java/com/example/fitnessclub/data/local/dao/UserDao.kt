@@ -8,6 +8,7 @@ import androidx.room.Update
 import com.example.fitnessclub.data.local.entity.User
 import kotlinx.coroutines.flow.Flow
 
+
 @Dao
 interface UserDao {
     @Query("SELECT * FROM User WHERE email = :email LIMIT 1")
@@ -24,4 +25,7 @@ interface UserDao {
 
     @Update
     suspend fun update(user: User): Int
+
+    @Query("UPDATE User SET goalVisits = :goal WHERE id = :userId")
+    suspend fun updateGoalVisits(userId: Long, goal: Int): Int
 }

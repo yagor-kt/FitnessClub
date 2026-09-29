@@ -26,6 +26,18 @@ class BookingRepository(
     fun getBookingHistory(userId: Long): Flow<List<BookingWithWorkout>> =
         bookingDao.getBookingHistory(userId, System.currentTimeMillis())
 
+    fun getNearestBooking(userId: Long): Flow<BookingWithWorkout?> =
+        bookingDao.getNearestBooking(userId, System.currentTimeMillis())
+
+    fun countCompletedThisMonth(
+        userId: Long,
+        monthStart: Long,
+        now: Long
+    ): Flow<Int> = bookingDao.countCompletedThisMonth(userId, monthStart, now)
+
+    fun getBookingsWithWorkouts(userId: Long): Flow<List<BookingWithWorkout>> =
+        bookingDao.getBookingsWithWorkouts(userId)
+
     suspend fun book(userId: Long, workoutId: Long): BookingResult =
         database.withTransaction {
             val workout = workoutDao.getById(workoutId)

@@ -16,5 +16,7 @@ data class User(
     val name: String,
     val weight: Float? = null,
     val goal: String? = null,
-    val subscriptionEnd: Long
+    val subscriptionEnd: Long,
+    val goalVisits: Int = 12,
+    val joinedAt: Long = System.currentTimeMillis()
 )

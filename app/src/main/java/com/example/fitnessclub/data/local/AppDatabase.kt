@@ -20,7 +20,7 @@ import java.util.Calendar
 
 @Database(
     entities = [User::class, Workout::class, Booking::class, Trainer::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -48,10 +48,10 @@ abstract class AppDatabase : RoomDatabase() {
                 AppDatabase::class.java,
                 "fitness_club_database"
             )
+                .fallbackToDestructiveMigration()
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         super.onCreate(db)
-
                         CoroutineScope(Dispatchers.IO).launch {
                             database.seedInitialData()
                         }
@@ -71,7 +71,9 @@ abstract class AppDatabase : RoomDatabase() {
                         email = "test@test.ru",
                         password = "1234",
                         name = "Алексей",
-                        subscriptionEnd = now + 30L * 24 * 60 * 60 * 1000
+                        subscriptionEnd = now + 30L * 24 * 60 * 60 * 1000,
+                        goalVisits = 12,
+                        joinedAt = now
                     )
                 )
 
@@ -80,39 +82,38 @@ abstract class AppDatabase : RoomDatabase() {
                         name = "Анна Смирнова",
                         specialization = "Йога и растяжка",
                         experienceYears = 7,
-                        photoUrl = "https://i.pravatar.cc/300?img=12"
+                        photoUrl = "https://i.pravatar.cc/300?img=12",
+                        rating = 4.9f,
+                        description = "Помогает развить гибкость, улучшить осанку и восстановить баланс."
                     ),
                     Trainer(
                         name = "Михаил Иванов",
                         specialization = "Силовые тренировки",
                         experienceYears = 10,
-                        photoUrl = "https://i.pravatar.cc/300?img=13"
+                        photoUrl = "https://i.pravatar.cc/300?img=13",
+                        rating = 4.8f,
+                        description = "Специализируется на силовой подготовке и безопасной работе с весами."
                     ),
                     Trainer(
                         name = "Елена Петрова",
                         specialization = "Функциональный тренинг",
                         experienceYears = 5,
-                        photoUrl = "https://i.pravatar.cc/300?img=14"
+                        photoUrl = "https://i.pravatar.cc/300?img=14",
+                        rating = 4.7f,
+                        description = "Составляет функциональные программы для развития выносливости и силы."
                     )
                 )
                 trainerDao().insertAll(trainers)
 
-                val workoutTitles = listOf(
-                    "Йога",
-                    "Силовая тренировка",
-                    "Функциональный тренинг",
-                    "Пилатес",
-                    "Круговая тренировка"
-                )
-                val workoutTrainers = listOf(
-                    trainers[0].name,
-                    trainers[1].name,
-                    trainers[2].name,
-                    trainers[0].name,
-                    trainers[1].name
+                val workoutData = listOf(
+                    Triple("Йога", trainers[0].name, "Йога"),
+                    Triple("Силовая тренировка", trainers[1].name, "Кроссфит"),
+                    Triple("Функциональный тренинг", trainers[2].name, "Кардио"),
+                    Triple("Пилатес", trainers[0].name, "Пилатес"),
+                    Triple("Растяжка", trainers[2].name, "Стретчинг")
                 )
 
-                val workouts = workoutTitles.indices.map { index ->
+                workoutData.forEachIndexed { index, (title, trainerName, type) ->
                     val date = Calendar.getInstance().apply {
                         add(Calendar.DAY_OF_YEAR, index + 1)
                         set(Calendar.HOUR_OF_DAY, 9 + index)
@@ -121,17 +122,19 @@ abstract class AppDatabase : RoomDatabase() {
                         set(Calendar.MILLISECOND, 0)
                     }.timeInMillis
 
-                    Workout(
-                        title = workoutTitles[index],
-                        trainerName = workoutTrainers[index],
-                        dateTime = date,
-                        hall = "Зал ${index + 1}",
-                        maxCapacity = 12,
-                        currentBookings = index % 3,
-                        isPersonal = false
+                    workoutDao().insert(
+                        Workout(
+                            title = title,
+                            trainerName = trainerName,
+                            dateTime = date,
+                            hall = "Зал ${index + 1}",
+                            maxCapacity = 15,
+                            currentBookings = index % 3,
+                            isPersonal = false,
+                            type = type
+                        )
                     )
                 }
-                workouts.forEach { workoutDao().insert(it) }
             }
         }
     }

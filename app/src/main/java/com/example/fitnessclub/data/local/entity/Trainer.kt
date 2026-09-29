@@ -10,5 +10,7 @@ data class Trainer(
     val name: String,
     val specialization: String,
     val experienceYears: Int,
-    val photoUrl: String
+    val photoUrl: String,
+    val rating: Float = 4.5f,
+    val description: String = ""
 )
