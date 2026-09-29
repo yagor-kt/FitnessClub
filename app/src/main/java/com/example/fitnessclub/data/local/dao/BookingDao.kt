@@ -20,12 +20,7 @@ interface BookingDao {
     )
     suspend fun isBooked(userId: Long, workoutId: Long): Boolean
 
-    @Query(
-        """
-        SELECT workoutId FROM Booking
-        WHERE userId = :userId
-        """
-    )
+    @Query("SELECT workoutId FROM Booking WHERE userId = :userId")
     fun observeBookedWorkoutIds(userId: Long): Flow<List<Long>>
 
     @Query(
@@ -68,6 +63,56 @@ interface BookingDao {
         """
     )
     suspend fun getActiveBookingWorkoutId(bookingId: Long, now: Long): Long?
+
+    @Transaction
+    @Query(
+        """
+        SELECT Booking.*
+        FROM Booking
+        INNER JOIN Workout ON Booking.workoutId = Workout.id
+        WHERE Booking.userId = :userId AND Workout.dateTime > :now
+        ORDER BY Workout.dateTime ASC
+        LIMIT 1
+        """
+    )
+    fun getNearestBooking(userId: Long, now: Long = System.currentTimeMillis()): Flow<BookingWithWorkout?>
+
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM Booking
+        INNER JOIN Workout ON Booking.workoutId = Workout.id
+        WHERE Booking.userId = :userId
+          AND Workout.dateTime BETWEEN :monthStart AND :now
+        """
+    )
+    fun countCompletedThisMonth(
+        userId: Long,
+        monthStart: Long,
+        now: Long
+    ): Flow<Int>
+
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM Booking
+        INNER JOIN Workout ON Booking.workoutId = Workout.id
+        WHERE Booking.userId = :userId AND Workout.dateTime <= :now
+        """
+    )
+    fun countAllCompleted(userId: Long, now: Long): Flow<Int>
+
+    @Transaction
+    @Query(
+        """
+        SELECT Booking.*
+        FROM Booking
+        INNER JOIN Workout ON Booking.workoutId = Workout.id
+        WHERE Booking.userId = :userId
+        ORDER BY Workout.dateTime ASC
+        """
+    )
+    fun getBookingsWithWorkouts(userId: Long): Flow<List<BookingWithWorkout>>
 
     @Transaction
     @Query(
