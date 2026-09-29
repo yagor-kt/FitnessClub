@@ -28,7 +28,7 @@
     <string name="validation_email">Введите корректный email</string>
     <string name="validation_password">Пароль должен содержать не менее 4 символов</string>
 
-    <!-- Dashboard -->
+    <!-- Главная -->
     <string name="dashboard_greeting">Привет, %1$s!</string>
     <string name="dashboard_time_greeting">%1$s, %2$s!</string>
     <string name="nearest_workout_title">Ближайшая тренировка</string>
@@ -63,6 +63,9 @@
     <string name="already_booked">Вы записаны</string>
     <string name="booking_success">Вы записаны на тренировку</string>
     <string name="booking_error">Не удалось записаться на тренировку</string>
+    <string name="workout_soon">Скоро</string>
+    <string name="workout_capacity">%1$d из %2$d</string>
+    <string name="no_workouts_for_day">На этот день тренировок нет</string>
 
     <!-- Мои записи -->
     <string name="my_bookings_title">Мои записи</string>
@@ -71,6 +74,12 @@
     <string name="cancel_booking">Отменить</string>
     <string name="cancel_booking_success">Запись отменена</string>
     <string name="cancel_booking_error">Не удалось отменить запись</string>
+    <string name="cancel_booking_confirm_title">Отменить запись на «%1$s»?</string>
+    <string name="keep_booking">Оставить</string>
+    <string name="booking_attended">Посещено</string>
+    <string name="booking_missed">Пропущено</string>
+    <string name="total_visits">Всего посещений: %1$d</string>
+    <string name="month_visits">В этом месяце: %1$d</string>
     <string name="personal_workout">Персональная тренировка</string>
 
     <!-- Профиль -->
