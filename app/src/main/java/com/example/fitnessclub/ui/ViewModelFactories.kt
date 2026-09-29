@@ -40,10 +40,16 @@ class RegistrationViewModelFactory(
 class DashboardViewModelFactory(
     private val application: Application,
     private val userId: Long,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val bookingRepository: BookingRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        DashboardViewModel(application, userId, userRepository) as T
+        DashboardViewModel(
+            application,
+            userId,
+            userRepository,
+            bookingRepository
+        ) as T
 }
 
 @Suppress("UNCHECKED_CAST")
